@@ -1,4 +1,8 @@
 # ADD THE LIBRARIES YOU'LL NEED
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation
+
 
 '''
 About the task:
@@ -11,11 +15,11 @@ Execute your code using the provided auto.py script(NO EDITS PERMITTED) as your 
 
 
 def encode_data(text):
-    # This function will be used to encode the reviews using a dictionary(created using corpus vocabulary) 
-    
-    # Example of encoding :"The food was fabulous but pricey" has a vocabulary of 4 words, each one has to be mapped to an integer like: 
-    # {'The':1,'food':2,'was':3 'fabulous':4 'but':5 'pricey':6} this vocabulary has to be created for the entire corpus and then be used to 
-    # encode the words into integers 
+    # This function will be used to encode the reviews using a dictionary(created using corpus vocabulary)
+
+    # Example of encoding :"The food was fabulous but pricey" has a vocabulary of 4 words, each one has to be mapped to an integer like:
+    # {'The':1,'food':2,'was':3 'fabulous':4 'but':5 'pricey':6} this vocabulary has to be created for the entire corpus and then be used to
+    # encode the words into integers
 
     # return encoded examples
 
@@ -57,7 +61,8 @@ def preprocess_data(data):
 
 def softmax_activation(x):
     # write your own implementation from scratch and return softmax values(using predefined softmax is prohibited)
-
+    exp_arr = tf.exp(x)
+    return exp_arr/tf.reduce_sum(exp_arr, axis=0)
 
 
 class NeuralNet:
@@ -71,6 +76,9 @@ class NeuralNet:
 
     def build_nn(self):
         #add the input and output layer here; you can use either tensorflow or pytorch
+        model = Sequential()
+        model.add(Dense(5, activation=softmax_activation))
+        model.compile(loss= tf.keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
 
     def train_nn(self,batch_size,epochs):
         # write the training loop here; you can use either tensorflow or pytorch
@@ -83,9 +91,9 @@ class NeuralNet:
 
 # DO NOT MODIFY MAIN FUNCTION'S PARAMETERS
 def main(train_file, test_file):
-    
+
     batch_size,epochs=
-    
+
     train_reviews=preprocess_data(train_data)
     test_reviews=preprocess_data(test_data)
 
