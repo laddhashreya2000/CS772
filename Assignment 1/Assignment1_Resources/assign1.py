@@ -1,7 +1,8 @@
 # ADD THE LIBRARIES YOU'LL NEED
+import pandas as pd
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Activation
+from tensorflow.keras.layers import Dense
 
 
 '''
@@ -44,16 +45,24 @@ def perform_padding(data):
 def preprocess_data(data):
     # make all the following function calls on your data
     # EXAMPLE:->
-        '''
-        review = data["reviews"]
-        review = convert_to_lower(review)
-        review = remove_punctuation(review)
-        review = remove_stopwords(review)
-        review = perform_tokenization(review)
-        review = encode_data(review)
-        review = perform_padding(review)
-        '''
+    """
+    review = data["reviews"]
+    review = convert_to_lower(review)
+    review = remove_punctuation(review)
+    review = remove_stopwords(review)
+    review = perform_tokenization(review)
+    review = encode_data(review)
+    review = perform_padding(review)
+    """
     # return processed data
+    review = data["reviews"]
+    review = convert_to_lower(review)
+    review = remove_punctuation(review)
+    review = remove_stopwords(review)
+    review = perform_tokenization(review)
+    review = encode_data(review)
+    review = perform_padding(review)
+    return review
 
 
 
@@ -69,14 +78,14 @@ class NeuralNet:
 
         self.reviews = reviews
         self.ratings = ratings
+        self.nn_model = Sequential()
 
 
 
     def build_nn(self):
         #add the input and output layer here; you can use either tensorflow or pytorch
-        model = Sequential()
-        model.add(Dense(5, activation=softmax_activation))
-        model.compile(loss= tf.keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
+        self.nn_model.add(Dense(5, activation=softmax_activation))
+        self.nn_model.compile(loss= tf.keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'])
 
     def train_nn(self,batch_size,epochs):
         # write the training loop here; you can use either tensorflow or pytorch
@@ -85,12 +94,13 @@ class NeuralNet:
         rating_val = self.ratings[:10000]
         review_train = self.reviews[10000:]
         rating_train = self.ratings[10000:]
-        history = model.fit(review_train, rating_train, batch_size = batch_size, epochs = epochs, validation_data = (review_val, rating_val))
-        res = model.evaluate(review_val, rating_val)
+        history = self.nn_model.fit(review_train, rating_train, batch_size = batch_size,
+                                    epochs = epochs, validation_data = (review_val, rating_val))
+        res = self.nn_model.evaluate(review_val, rating_val)
         print(res.accuracy)
     def predict(self, reviews):
         # return a list containing all the ratings predicted by the trained model
-        results = model.predict(reviews)
+        results = self.nn_model.predict(reviews)
         return results
 
 
@@ -99,10 +109,13 @@ def main(train_file, test_file):
 
     batch_size,epochs=512, 20
 
-    train_reviews=preprocess_data(train_data)
-    test_reviews=preprocess_data(test_data)
+    train_data = pd.read_csv(train_file)
+    test_data = pd.read_csv(test_file)
+    train_ratings = train_data['ratings']
+    train_reviews = preprocess_data(train_data)
+    test_reviews = preprocess_data(test_data)
 
-    model=NeuralNet(train_reviews,train_ratings)
+    model=NeuralNet(train_reviews, train_ratings)
     model.build_nn()
     model.train_nn(batch_size,epochs)
 
