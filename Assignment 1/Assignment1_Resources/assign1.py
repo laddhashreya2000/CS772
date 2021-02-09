@@ -6,9 +6,7 @@ from tensorflow.keras.layers import Dense, Activation
 
 '''
 About the task:
-
 You are provided with a codeflow- which consists of functions to be implemented(MANDATORY).
-
 You need to implement each of the functions mentioned below, you may add your own function parameters if needed(not to main).
 Execute your code using the provided auto.py script(NO EDITS PERMITTED) as your code will be evaluated using an auto-grader.
 '''
@@ -83,16 +81,23 @@ class NeuralNet:
     def train_nn(self,batch_size,epochs):
         # write the training loop here; you can use either tensorflow or pytorch
         # print validation accuracy
-
+        review_val = self.reviews[:10000]
+        rating_val = self.ratings[:10000]
+        review_train = self.reviews[10000:]
+        rating_train = self.ratings[10000:]
+        history = model.fit(review_train, rating_train, batch_size = batch_size, epochs = epochs, validation_data = (review_val, rating_val))
+        res = model.evaluate(review_val, rating_val)
+        print(res.accuracy)
     def predict(self, reviews):
         # return a list containing all the ratings predicted by the trained model
-
+        results = model.predict(reviews)
+        return results
 
 
 # DO NOT MODIFY MAIN FUNCTION'S PARAMETERS
 def main(train_file, test_file):
 
-    batch_size,epochs=
+    batch_size,epochs=512, 20
 
     train_reviews=preprocess_data(train_data)
     test_reviews=preprocess_data(test_data)
