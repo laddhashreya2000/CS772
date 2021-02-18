@@ -3,7 +3,11 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
-
+import re
+import nltk
+nltk.download('stopwords')
+from nltk.corpus import stopwords
+pattern = re.compile(r'\b(' + r'|'.join(stopwords.words('english')) + r')\b\s*')
 
 '''
 About the task:
@@ -21,26 +25,35 @@ def encode_data(text):
     # encode the words into integers
 
     # return encoded examples
+    return text
 
 
 
 def convert_to_lower(text):
     # return the reviews after convering then to lowercase
+    return text.str.lower()
 
 
 def remove_punctuation(text):
     # return the reviews after removing punctuations
+    text = text.str.replace(r'[^\w\s]', '')
+    return text
+
 
 
 def remove_stopwords(text):
     # return the reviews after removing the stopwords
+    text = text.str.replace(pattern, '')
+    return text
 
 def perform_tokenization(text):
     # return the reviews after performing tokenization
+    return text
 
 
 def perform_padding(data):
     # return the reviews after padding the reviews to maximum length
+    return text
 
 def preprocess_data(data):
     # make all the following function calls on your data
@@ -56,10 +69,15 @@ def preprocess_data(data):
     """
     # return processed data
     review = data["reviews"]
+    print(review.head(5))
     review = convert_to_lower(review)
+    print(review.head(5))
     review = remove_punctuation(review)
+    print(review.head(5))
     review = remove_stopwords(review)
+    print(review.head(5))
     review = perform_tokenization(review)
+    print(review.head(5))
     review = encode_data(review)
     review = perform_padding(review)
     return review
