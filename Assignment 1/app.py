@@ -79,13 +79,20 @@ def imgshow(uploaded_file):
 	  image = uploaded_file.read()
 	  st.image(image, caption='Wireframe Image', use_column_width=True)
 
-# Save the uploaded image temporarily
-def save_image_temp(uploaded_file):
-	if uploaded_file is not None:
-	  img = Image.open(uploaded_file)
-	  filename = "temp_" + ''.join([random.choice(string.ascii_letters + string.digits) for n in range(10)]) + ".png"
-	  img.save(filename)
-	  return filename
+# Save the uploaded dataframe temporarily
+def save_file_temp(df):
+	# df = pd.read_csv(uploaded_file, delimiter='\t')
+	print(df.head())
+	filename = "temp_" + ''.join([random.choice(string.ascii_letters + string.digits) for n in range(10)]) + ".csv"
+	df.to_csv(filename, index=False)
+	return filename
+
+def save_sent_temp(user_input):
+	row = {'reviews': [user_input]}
+	df = pd.DataFrame(row, columns=['reviews'])
+	filename = "temp_" + ''.join([random.choice(string.ascii_letters + string.digits) for n in range(10)]) + ".csv"
+	df.to_csv(filename)
+	return filename
 
 # Check if a file exists & delete it
 def delete_file(filename):
@@ -121,10 +128,16 @@ def display_result(json_data, html_file, show_json, show_html):
 		st.json(json_data)
 
 # Submit the uploaded wireframe image for component detection
-def submit_clicked(value, uploaded_img_file, options, show_json, show_html):
+def submit_clicked(value, user_input, df, options, show_final, show_prob):
 	if(value):
-		with st.spinner(text='Submitted successfully. Processing dataset...'):
-			img_filename = save_image_temp(uploaded_img_file)
+		with st.spinner(text='Submitted successfully. Performing sentiment analysis ...'):
+			if user_input!="":
+				img_filename = save_sent_temp(user_input)
+			elif df.empty==False:
+				img_filename = save_file_temp(df)
+			else:
+				st.write("Enter a sentence or upload a file")
+				return
 
 			# UI Component Detection
 			print("Starting component detection & classification")
@@ -183,11 +196,11 @@ def main():
 	user_input = st.text_input("Input your sentence for sentiment analysis here", "")
 
 	st.text("Or")
+	df = pd.DataFrame()
 	uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
 	if uploaded_file is not None:
 		# file_details = {"FileName":uploaded_file.name,"FileType":uploaded_file.type,"FileSize":uploaded_file.size}
 		# st.write(file_details)
-	# imgshow(uploaded_file)
 		df = pd.read_csv(uploaded_file)
 		st.dataframe(df)
 
@@ -216,8 +229,7 @@ def main():
 	# options["max_line_gap"] = st.sidebar.slider("Max Text Line Gap to be Same Paragraph", min_value=1, max_value=20, value=4, step=1)
 
 	submitted = st.button("Submit")
-	submit_clicked(submitted, uploaded_file, options, show_final, show_prob)
-
+	submit_clicked(submitted, user_input, df, options, show_final, show_prob)
 
 	st.write('_Developed with ❤️ by [Shreya](https://laddhashreya2000.github.io), [Shaun]() & [Hitul]()_')
 
