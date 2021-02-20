@@ -1,5 +1,6 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import pandas as pd
 import time
 import json
 import base64
@@ -13,10 +14,9 @@ import string
 import os
 import shutil
 
-CNN_MODELS = {
-	"CNN (Wireframes & ReDraw)": "cnn-generalized",
-	"CNN (RICO Dataset)": "cnn-rico", 
-	"CNN (Wireframes only)": "cnn-wireframes-only"
+MODELS = {
+	"Only 1 Dense Layer": "model_1",
+	"Hidden Layers": "model_2", 
 }
 
 repo_root = os.path.dirname(os.path.abspath(__file__))[:os.path.dirname(os.path.abspath(__file__)).find("smart_ui_tf20")+13]
@@ -123,7 +123,7 @@ def display_result(json_data, html_file, show_json, show_html):
 # Submit the uploaded wireframe image for component detection
 def submit_clicked(value, uploaded_img_file, options, show_json, show_html):
 	if(value):
-		with st.spinner(text='Submitted successfully. Processing image...'):
+		with st.spinner(text='Submitted successfully. Processing dataset...'):
 			img_filename = save_image_temp(uploaded_img_file)
 
 			# UI Component Detection
@@ -180,35 +180,43 @@ def main():
 	st.title('Sentiment Analysis')
 	st.subheader('CS772 - Assignment 1')
 
+	user_input = st.text_input("Input your sentence for sentiment analysis here", "")
+
+	st.text("Or")
 	uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
-	imgshow(uploaded_file)
+	if uploaded_file is not None:
+		# file_details = {"FileName":uploaded_file.name,"FileType":uploaded_file.type,"FileSize":uploaded_file.size}
+		# st.write(file_details)
+	# imgshow(uploaded_file)
+		df = pd.read_csv(uploaded_file)
+		st.dataframe(df)
 
 	st.sidebar.title("Outputs")
 
-	show_json = st.sidebar.checkbox("Show JSON Output")
-	show_html = st.sidebar.checkbox("Show HTML Output")
+	show_final = st.sidebar.checkbox("Show Final Sentiment Class")
+	show_prob = st.sidebar.checkbox("Show Probabilities of all Classes")
 
-	st.sidebar.title("Advanced Options")
+	st.sidebar.title("Choose Model")
 	options = {}
 	
-	st.sidebar.subheader("For UI Elements:")
+	# st.sidebar.subheader("For UI Elements:")
 	
-	options["cnn_model"] = CNN_MODELS[st.sidebar.selectbox(
-		"Model for UI Component Classification:", 
-		options=["CNN (Wireframes & ReDraw)", "CNN (Wireframes only)", "CNN (RICO Dataset)"]
+	options["model"] = MODELS[st.sidebar.selectbox(
+		"Model for Sentiment Analysis:", 
+		options=["Only 1 Dense Layer", "Hidden Layers"]
 	)]
 	
-	options["min_grad"] = st.sidebar.slider("Gradient Threshold to produce Binary Map", min_value=1, max_value=10, value=3, step=1)
-	options["ffl_block"] = st.sidebar.slider("Fill-flood threshold", min_value=1, max_value=10, value=5, step=1)
-	options["min_ele_area"] = st.sidebar.slider("Minimum Area for Components", min_value=10, max_value=200, value=25, step=1)
-	options["merge_contained_ele"] = st.sidebar.checkbox("Merge Elements Contained in Others")
+	# options["min_grad"] = st.sidebar.slider("Gradient Threshold to produce Binary Map", min_value=1, max_value=10, value=3, step=1)
+	# options["ffl_block"] = st.sidebar.slider("Fill-flood threshold", min_value=1, max_value=10, value=5, step=1)
+	# options["min_ele_area"] = st.sidebar.slider("Minimum Area for Components", min_value=10, max_value=200, value=25, step=1)
+	# options["merge_contained_ele"] = st.sidebar.checkbox("Merge Elements Contained in Others")
 
-	st.sidebar.subheader("For Text:")
-	options["max_word_inline_gap"] = st.sidebar.slider("Max Text Word Gap to be Same Line", min_value=1, max_value=15, value=4, step=1)
-	options["max_line_gap"] = st.sidebar.slider("Max Text Line Gap to be Same Paragraph", min_value=1, max_value=20, value=4, step=1)
+	# st.sidebar.subheader("For Text:")
+	# options["max_word_inline_gap"] = st.sidebar.slider("Max Text Word Gap to be Same Line", min_value=1, max_value=15, value=4, step=1)
+	# options["max_line_gap"] = st.sidebar.slider("Max Text Line Gap to be Same Paragraph", min_value=1, max_value=20, value=4, step=1)
 
 	submitted = st.button("Submit")
-	submit_clicked(submitted, uploaded_file, options, show_json, show_html)
+	submit_clicked(submitted, uploaded_file, options, show_final, show_prob)
 
 
 	st.write('_Developed with ❤️ by [Shreya](https://laddhashreya2000.github.io), [Shaun]() & [Hitul]()_')
