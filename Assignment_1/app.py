@@ -1,18 +1,30 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
-# import time
-# import json
 import base64
-# import requests
 import uuid
 import re
-# import cv2
-# from PIL import Image
 import random
 import string
 import os
 import shutil
+from tensorflow.keras.models import load_model
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+# from tensorflow.keras import models, layers, preprocessing as kprocessing
+import re
+import nltk
+nltk.download('punkt', quiet=True)
+from nltk.tokenize import word_tokenize
+nltk.download('stopwords', quiet=True)
+from nltk.corpus import stopwords
+pattern = re.compile(r'\b(' + r'|'.join(stopwords.words('english')) + r')\b\s*')
+tokenizer = Tokenizer()
+import streamlit as st
+# from argparse import ArgumentParser
+
 
 MODELS = {
 	"GloVe 1 layer ReLu": "glove_1layer_relu.h5",
@@ -26,6 +38,7 @@ MODELS = {
 repo_root = os.path.dirname(os.path.abspath(__file__))[:os.path.dirname(os.path.abspath(__file__)).find("Assignment_1")+13]
 print(repo_root)
 # Obtain the CSS for Buttons to be displayed
+@st.cache(suppress_st_warning=True, allow_output_mutation=True)
 def get_button_css(button_id):
 	custom_css = f"""
         <style>
@@ -88,11 +101,6 @@ def delete_file(filename):
 # Delete the temporarily uploaded image file & it corresponsing results
 def delete_temp_files(img_filename):
 	delete_file(img_filename)
-	# delete_file("ip/" + img_filename.replace("png", "json"))
-	# delete_file("compo.json")
-	# delete_file("result.jpg")
-	# delete_file("ip/result.jpg")
-	# shutil.rmtree("ip")
 
 # Display the results (JSON & HTML) of the component detection process
 def display_result(output_file, show_final, show_prob):
@@ -126,11 +134,11 @@ def submit_clicked(value, user_input, df, options, show_final, show_prob):
 			# Starting prediction
 			print("Running model")
 			if(show_final and show_prob):
-				out_format = "all"
+				format = "all"
 			elif(show_final):
-				out_format = "class"
+				format = "class"
 			elif(show_prob):
-				out_format = "prob"
+				format = "prob"
 			else:
 				st.write("Choose one output option from side panel")
 				return
@@ -140,18 +148,43 @@ def submit_clicked(value, user_input, df, options, show_final, show_prob):
 				model = options["model"],
 				input=in_filename,
 				output="output.csv",
-				format = out_format
+				format = format
 			)
 			print(model_run)
-			os.system(model_run)
-
+			# os.system(model_run)
+			model_path = repo_root+"/models/"+options["model"]
+			input_csv_path = repo_root+"/"+in_filename
+			output_csv_path = repo_root+"/output.csv"
+			preds, probs = predict_on_csv(input_csv_path, model_path)
+			df_in = pd.read_csv(input_csv_path)
+			if(format=="all"):
+				df_in["ratings"]=''
+				df_in["prediction probabilities"] = ''
+				i=0
+				for x in preds:
+					df_in["ratings"].iloc[i] = x
+					df_in["prediction probabilities"].iloc[i] = probs[i]
+					i=i+1
+			elif(format=="class"):
+				df_in["ratings"]=''
+				i=0
+				for x in preds:
+					df_in["ratings"].iloc[i] = x
+					i=i+1
+			else:
+				df_in["prediction probabilities"] = ''
+				i=0
+				for x in preds:
+					df_in["prediction probabilities"].iloc[i] = probs[i]
+					i=i+1
+			df_in.to_csv(output_csv_path, index=False)
 			st.success('Completed Prediction!')
 
 			# Dummy HTML rendering of the wireframe image
-			output_file = "output.csv"
+			# output_file = "output.csv"
 
-			output = pd.read_csv(output_file)
-			st.dataframe(output)
+			# output = pd.read_csv(output_file)
+			st.dataframe(df_in)
 
 			# download=st.button('Download CSV File')
 			# if download:
@@ -162,8 +195,54 @@ def submit_clicked(value, user_input, df, options, show_final, show_prob):
 
 			delete_temp_files(in_filename)
 
+def predict_on_csv(csv_path, model_name):
+    df = pd.read_csv(csv_path)
+    reviews = preprocess_data(df)
+    padded, _ = token(reviews)
+    model = load_model(model_name)
+    probs = model.predict(padded)
+    preds = np.argmax(probs, axis=1) + 1
+    return preds, probs
+
+def convert_to_lower(text):
+    # return the reviews after convering then to lowercase
+    return text.str.lower()
+
+def remove_punctuation(text):
+    # return the reviews after removing punctuations
+    text = text.str.replace(r'[^\w\s]', '')
+    return text
+
+def remove_stopwords(text):
+    # return the reviews after removing the stopwords
+    text = text.str.replace(pattern, '')
+    return text
+
+def preprocess_data(data):
+    # make all the following function calls on your data
+    # return processed data
+    review = data["reviews"]
+    review = convert_to_lower(review)
+    review = remove_punctuation(review)
+    review = remove_stopwords(review)
+    # review = perform_tokenization(review)
+    # review = encode_data(review)
+    # review = perform_padding(review)
+    # print(review.head(5))
+    return review
+
+def token(train_reviews):# Tokenize text
+
+    tokenizer = Tokenizer()
+    tokenizer.fit_on_texts(train_reviews)
+    word_index = tokenizer.word_index
+    vocab_size=len(word_index)
+    sequences = tokenizer.texts_to_sequences(train_reviews)
+    padded = pad_sequences(sequences, maxlen=29, padding='post', truncating='post')
+    return padded, tokenizer
 
 def main():
+	
 	st.title('Sentiment Analysis')
 	st.subheader('CS772 - Assignment 1')
 

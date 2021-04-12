@@ -2,9 +2,6 @@
 import pandas as pd
 import numpy as np
 import tensorflow as tf
-# from tensorflow.keras.models import Sequential
-# from tensorflow.keras.layers import Dense
-# from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 # from tensorflow.keras import models, layers, preprocessing as kprocessing
@@ -18,8 +15,7 @@ pattern = re.compile(r'\b(' + r'|'.join(stopwords.words('english')) + r')\b\s*')
 tokenizer = Tokenizer()
 from tensorflow.keras.models import load_model
 # from tensorflow.keras.layers import Embedding
-
-from os.path import join as pjoin
+import streamlit as st
 import os
 from argparse import ArgumentParser
 
@@ -33,6 +29,7 @@ parser.add_argument("--format", type=str, help="output format type")
 
 # repo_root = os.path.dirname(os.path.abspath(__file__))[:os.path.dirname(os.path.abspath(__file__)).find("Assignment 1")+13]
 
+@st.cache(allow_output_mutation=True)
 
 def predict_on_csv(csv_path, model_name):
     df = pd.read_csv(csv_path)
@@ -76,8 +73,6 @@ def token(train_reviews):# Tokenize text
     tokenizer.fit_on_texts(train_reviews)
     word_index = tokenizer.word_index
     vocab_size=len(word_index)
-    # print(vocab_size)
-    # Padding data
     sequences = tokenizer.texts_to_sequences(train_reviews)
     padded = pad_sequences(sequences, maxlen=29, padding='post', truncating='post')
     return padded, tokenizer
