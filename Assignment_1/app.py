@@ -13,7 +13,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-# from tensorflow.keras import models, layers, preprocessing as kprocessing
+# from tensorflow.keras import model`s, layers, preprocessing as kprocessing
 import re
 import nltk
 nltk.download('punkt', quiet=True)
@@ -27,9 +27,12 @@ import streamlit as st
 
 
 MODELS = {
-	"GloVe 1 layer ReLu": "glove_1layer_relu.h5",
+	"BERT": "model_id.h5",
+	"LSTM with Embedding": "lstm_embed.h5",
+	"BiGRU with Embedding": "bigru_embed.h5",
+	# "GloVe 1 layer ReLu": "glove_1layer_relu.h5",
 	# "GloVe 1 layer Softmax": "model_2", 
-	"Word2Vec 1 layer ReLu": "w2vec_1layer_relu.h5", 
+	# "Word2Vec 1 layer ReLu": "w2vec_1layer_relu.h5", 
 	# "Word2Vec 1 layer Softmax": "model_4",
 	# "FastText 1 layer ReLu": "model_5",
 	# "FastText 1 layer Softmax": "model_6"
@@ -269,13 +272,13 @@ def main():
 	
 	options["model"] = MODELS[st.sidebar.selectbox(
 		"Model for Sentiment Analysis:", 
-		options=["GloVe 1 layer ReLu", "Word2Vec 1 layer ReLu"]
+		options=["BERT", "LSTM with Embedding", "BiGRU with Embedding"]
 	)]
 	
 	submitted = st.button("Submit")
 	submit_clicked(submitted, user_input, df, options, show_final, show_prob)
 
-	st.write('_Developed with ❤️ by [Shreya](https://laddhashreya2000.github.io), [Shaun]() & [Hitul]()_')
+	st.write('_Developed with ❤️ by [Shreya](https://laddhashreya2000.github.io) & [Hitul]()_')
 
 if __name__ == "__main__":
 	main()

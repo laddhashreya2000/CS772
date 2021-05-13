@@ -4,3 +4,5 @@ temp_*
   
 .vscode/
 __pycache__/
+*.bin
+uncased_L-12_H-768_A-12/
